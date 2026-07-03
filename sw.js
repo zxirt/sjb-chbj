@@ -1,9 +1,13 @@
-const CACHE_NAME = 'cekharga-shell-v1';
+const CACHE_NAME = 'cekharga-shell-v2';
 const APP_SHELL = ['./cek-harga.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) =>
+      // cache each file individually so one missing/blocked file doesn't
+      // abort caching of the rest (cache.addAll is all-or-nothing)
+      Promise.allSettled(APP_SHELL.map((url) => cache.add(url)))
+    )
   );
   self.skipWaiting();
 });
