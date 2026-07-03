@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F2790C">
+<title>Cek Harga — Item Database</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FBF8F2;
+    --card: #FFFFFF;
+    --line: #ECE5D8;
+    --ink: #2A2620;
+    --ink-dim: #7C7568;
+    --ink-faint: #B3AB9B;
+    --accent: #F2790C;
+    --accent-bg: #FFF0DC;
+    --accent-bg2: #FFE3C2;
+    --teal: #189A79;
+    --teal-bg: #E4F6F0;
+    --red: #E24C3D;
+    --red-bg: #FDEBE8;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(40,30,10,0.04), 0 4px 14px rgba(40,30,10,0.05);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 16px 40px;}
+
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:rgba(251,248,242,0.92);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding-top:18px;
+  }
+  .topbar.scrolled{box-shadow:0 6px 20px rgba(40,30,10,0.07);}
+  .topbar-inner{max-width:920px; margin:0 auto; padding:0 16px;}
+
+  header{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:4px; font-weight:600;
+  }
+  h1{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:800;
+    font-size:32px;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+    line-height:1;
+    color:var(--ink);
+  }
+  .count-pill{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; color:var(--ink-dim);
+    background:var(--card);
+    border:1px solid var(--line);
+    padding:7px 12px; border-radius:20px;
+    white-space:nowrap;
+  }
+  .count-pill b{color:var(--accent); font-weight:700;}
+
+  .search-box{position:relative; margin-bottom:12px;}
+  .search-box input{
+    width:100%;
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:var(--radius);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    padding:14px 44px 14px 44px;
+    outline:none;
+    box-shadow:var(--shadow);
+    transition:border-color .15s ease;
+  }
+  .search-box input:focus{border-color:var(--accent);}
+  .search-box input::placeholder{color:var(--ink-faint);}
+  .search-icon{
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    width:18px; height:18px; color:var(--ink-faint); pointer-events:none;
+  }
+  .clear-btn{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    background:none; border:none; color:var(--ink-faint); cursor:pointer;
+    font-size:20px; padding:6px; line-height:1; display:none;
+  }
+  .clear-btn.show{display:block;}
+  .clear-btn:hover{color:var(--ink);}
+
+  .filters{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+  .filter-select{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+    background:var(--card); border:1.5px solid var(--line);
+    color:var(--ink-dim);
+    padding:9px 30px 9px 12px; border-radius:9px;
+    cursor:pointer; outline:none;
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237C7568' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center; background-size:14px;
+  }
+  .filter-select:focus{border-color:var(--accent);}
+  .filter-clear{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
+    color:var(--red); background:var(--red-bg);
+    border:1.5px solid transparent; padding:9px 14px; border-radius:9px;
+    cursor:pointer; display:none;
+  }
+  .filter-clear.show{display:inline-block;}
+
+  .toolbar{
+    display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap; align-items:center;
+  }
+  .tbtn{
+    font-family:'Inter',sans-serif;
+    font-size:13px; font-weight:600;
+    background:var(--card);
+    border:1.5px solid var(--line);
+    color:var(--ink-dim);
+    padding:9px 14px;
+    border-radius:9px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+    transition:all .15s ease;
+  }
+  .tbtn:hover{border-color:var(--accent); color:var(--accent);}
+  .tbtn svg{width:14px; height:14px;}
+  .tbtn.install{background:var(--accent); color:#fff; border-color:var(--accent); display:none;}
+  .tbtn.install.show{display:flex;}
+  .tbtn .spin{animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .sync-label{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint);
+    margin-left:auto; display:flex; align-items:center; gap:6px;
+  }
+  .sync-dot{width:6px; height:6px; border-radius:50%; background:var(--teal);}
+  .sync-dot.err{background:var(--red);}
+
+  .status-msg{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; color:var(--teal);
+    display:flex; align-items:center; padding:0 4px;
+    opacity:0; transition:opacity .3s ease;
+  }
+  .status-msg.show{opacity:1;}
+  .status-msg.err{color:var(--red);}
+
+  .hint{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; color:var(--ink-faint);
+    padding:10px 2px;
+  }
+
+  .results{display:flex; flex-direction:column; gap:10px; padding-top:6px;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    box-shadow:var(--shadow);
+  }
+  .card-top{margin-bottom:10px;}
+  .card-name{font-size:15px; font-weight:700; color:var(--ink); line-height:1.3;}
+  .card-meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; color:var(--ink-faint);
+    margin-top:4px; display:flex; gap:10px; flex-wrap:wrap;
+  }
+  .card-meta span{white-space:nowrap;}
+  .card-meta b{color:var(--ink-dim); font-weight:500;}
+
+  .units{display:flex; flex-direction:column; gap:8px; border-top:1px dashed var(--line); padding-top:10px;}
+  .unit-row{
+    display:grid;
+    grid-template-columns: 58px 1fr 110px 130px 90px;
+    gap:10px;
+    align-items:center;
+  }
+  .unit-satuan{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700; font-size:14px; text-transform:uppercase;
+    color:var(--accent);
+    background:var(--accent-bg);
+    text-align:center; padding:6px 0; border-radius:7px;
+  }
+  .unit-barcode{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; color:var(--ink-faint);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .unit-barcode.empty{opacity:0.45; font-style:italic;}
+
+  .field{display:flex; flex-direction:column; gap:2px;}
+  .field-label{font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-faint); font-weight:600; padding-left:2px;}
+  .beli-val{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--ink-dim);
+    padding:8px 2px;
+  }
+
+  .input-wrap{position:relative; display:flex; align-items:center;}
+  .input-prefix{
+    position:absolute; left:9px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-faint); pointer-events:none;
+  }
+  .input-suffix{
+    position:absolute; right:9px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-faint); pointer-events:none;
+  }
+  .num-input{
+    width:100%;
+    font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600;
+    color:var(--ink);
+    background:var(--bg);
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    padding:8px 8px 8px 26px;
+    outline:none;
+    -moz-appearance:textfield;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .num-input::-webkit-outer-spin-button, .num-input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  .num-input:focus{border-color:var(--accent); background:#fff;}
+  .jual-input{color:var(--accent);}
+  .margin-input{padding-left:8px; padding-right:26px; text-align:right;}
+  .margin-input.pos{border-color:var(--teal); background:var(--teal-bg);}
+  .margin-input.neg{border-color:var(--red); background:var(--red-bg);}
+  .margin-input:disabled{opacity:0.4; background:var(--line);}
+  .num-input.saving{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-bg);}
+
+  .empty-state{text-align:center; padding:60px 20px; color:var(--ink-faint);}
+  .empty-state svg{width:40px; height:40px; margin-bottom:14px; opacity:0.4;}
+  .empty-state p{font-size:14px; margin-bottom:4px; color:var(--ink-dim);}
+  .empty-state .sub{font-family:'IBM Plex Mono',monospace; font-size:12px;}
+
+  .config-banner{
+    background:var(--red-bg); border:1.5px solid var(--red); border-radius:var(--radius);
+    padding:16px 18px; margin:16px 0; font-size:13px; color:var(--ink); line-height:1.6;
+  }
+  .config-banner code{background:#fff; padding:2px 6px; border-radius:5px; font-family:'IBM Plex Mono',monospace; font-size:12px;}
+
+  footer{
+    text-align:center; margin-top:30px;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint);
+  }
+
+  @media (max-width:600px){
+    h1{font-size:26px;}
+    .sync-label{margin-left:0;}
+    .unit-row{grid-template-columns: 1fr 1fr; grid-template-areas: "satuan barcode" "beli beli" "jual margin"; row-gap:8px;}
+    .unit-satuan{grid-area:satuan;}
+    .unit-barcode{grid-area:barcode; text-align:right;}
+    .unit-row > .field.beli-field{grid-area:beli;}
+    .unit-row > .field.jual-field{grid-area:jual;}
+    .unit-row > .field.margin-field{grid-area:margin;}
+  }
+</style>
+</head>
+<body>
+<div class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <header>
+      <div>
+        <div class="brand-eyebrow">Item Database · Cek Harga</div>
+        <h1>Cek Harga</h1>
+      </div>
+      <div class="count-pill" id="countPill">Memuat…</div>
+    </header>
+
+    <div class="search-box">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Cari nama barang, kode, barcode, atau supplier…" autocomplete="off">
+      <button class="clear-btn" id="clearBtn">×</button>
+    </div>
+
+    <div class="filters">
+      <select class="filter-select" id="filterJenis"><option value="">Semua Jenis</option></select>
+      <select class="filter-select" id="filterMerek"><option value="">Semua Merek</option></select>
+      <select class="filter-select" id="filterSupplier"><option value="">Semua Supplier</option></select>
+      <button class="filter-clear" id="filterClear">Hapus filter ×</button>
+    </div>
+
+    <div class="toolbar">
+      <button class="tbtn" id="refreshBtn">
+        <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
+        Refresh Data
+      </button>
+      <button class="tbtn install" id="installBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>
+        Install Aplikasi
+      </button>
+      <span class="status-msg" id="statusMsg"></span>
+      <span class="sync-label" id="syncLabel"><span class="sync-dot" id="syncDot"></span><span id="syncText">belum sinkron</span></span>
+    </div>
+    <div class="hint" id="resultHint"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="configBanner" style="display:none;" class="config-banner">
+    <b>Belum terhubung ke Google Sheets.</b><br>
+    Buka file <code>cek-harga.html</code>, cari <code>WEBAPP_URL</code> di bagian atas kode, lalu isi dengan URL Apps Script Web App kamu.
+  </div>
+  <div class="results" id="results"></div>
+</div>
+
+<footer>Karenta Tools · data tersinkron real-time lewat Google Sheets di semua perangkat</footer>
+
+<script>
+/* ============ ISI URL APPS SCRIPT WEB APP KAMU DI SINI ============ */
+const CONFIG = {
+  WEBAPP_URL: 'PASTE_URL_APPS_SCRIPT_DISINI'
+};
+/* ==================================================================== */
+
+let ITEMS = [];
+let currentQuery = '';
+let filterJenis = '';
+let filterMerek = '';
+let filterSupplier = '';
+let pendingEdits = new Map();
+let flushTimer = null;
+let autoRefreshTimer = null;
+
+const el = (id) => document.getElementById(id);
+const resultsEl = el('results');
+const hintEl = el('resultHint');
+const countPill = el('countPill');
+const searchInput = el('searchInput');
+const clearBtn = el('clearBtn');
+const statusMsg = el('statusMsg');
+
+function isConfigured(){
+  return CONFIG.WEBAPP_URL && CONFIG.WEBAPP_URL.indexOf('script.google.com') !== -1;
+}
+
+function fmtInt(n){
+  if(n === null || n === undefined || isNaN(n)) return '';
+  return Math.round(n);
+}
+function calcMargin(beli, jual){
+  if(!beli || beli <= 0) return null;
+  return ((jual - beli) / beli) * 100;
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- LOAD FROM GOOGLE SHEETS ---------- */
+async function loadItems(showToast){
+  if(!isConfigured()){
+    el('configBanner').style.display = 'block';
+    countPill.textContent = 'Belum terhubung';
+    return;
+  }
+  el('configBanner').style.display = 'none';
+  el('refreshIcon').classList.add('spin');
+  try{
+    const res = await fetch(CONFIG.WEBAPP_URL, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    ITEMS = (data.items || []).map((it, i) => ({...it, _idx: i}));
+    buildFilterOptions();
+    render();
+    setSyncState(true, new Date());
+    if(showToast) showStatus('Data terbaru dimuat', false);
+  }catch(err){
+    console.error(err);
+    setSyncState(false, null);
+    showStatus('Gagal memuat data — cek koneksi / URL Apps Script', true);
+  }finally{
+    el('refreshIcon').classList.remove('spin');
+  }
+}
+
+function setSyncState(ok, when){
+  const dot = el('syncDot');
+  const text = el('syncText');
+  dot.classList.toggle('err', !ok);
+  if(ok && when){
+    text.textContent = 'sinkron ' + when.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+  }else if(!ok){
+    text.textContent = 'gagal sinkron';
+  }
+}
+
+/* ---------- PUSH EDITS TO GOOGLE SHEETS ---------- */
+function queueEdit(item, unit){
+  pendingEdits.set(item.row + '-' + unit.n, {row: item.row, unitIndex: unit.n, jual: unit.jual});
+  clearTimeout(flushTimer);
+  flushTimer = setTimeout(flushEdits, 700);
+}
+
+async function flushEdits(){
+  if(!isConfigured()) return;
+  const edits = [...pendingEdits.values()];
+  pendingEdits.clear();
+  if(edits.length === 0) return;
+  showStatus('Menyimpan ke Google Sheets…', false);
+  try{
+    await fetch(CONFIG.WEBAPP_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({action: 'updatePrices', edits})
+    });
+    showStatus('Tersimpan ✓ — muncul di semua perangkat', false);
+    setSyncState(true, new Date());
+  }catch(err){
+    console.error(err);
+    showStatus('Gagal menyimpan — cek koneksi', true);
+    setSyncState(false, null);
+  }
+}
+
+/* ---------- FILTERS ---------- */
+function uniqueSorted(items, key){
+  const set = new Set();
+  items.forEach(it => { if(it[key]) set.add(it[key]); });
+  return [...set].sort((a,b) => a.localeCompare(b, 'id'));
+}
+function buildFilterOptions(){
+  const fillSelect = (selectEl, values, allLabel) => {
+    const prev = selectEl.value;
+    selectEl.innerHTML = `<option value="">${allLabel}</option>` +
+      values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    if(values.includes(prev)) selectEl.value = prev;
+  };
+  fillSelect(el('filterJenis'), uniqueSorted(ITEMS, 'jenis'), 'Semua Jenis');
+  fillSelect(el('filterMerek'), uniqueSorted(ITEMS, 'merek'), 'Semua Merek');
+  fillSelect(el('filterSupplier'), uniqueSorted(ITEMS, 'supplier'), 'Semua Supplier');
+}
+
+function matchesQuery(item, q){
+  if(!q) return true;
+  q = q.toLowerCase();
+  if(item.nama.toLowerCase().includes(q)) return true;
+  if(item.kode.toLowerCase().includes(q)) return true;
+  if(item.supplier && item.supplier.toLowerCase().includes(q)) return true;
+  if(item.merek && item.merek.toLowerCase().includes(q)) return true;
+  if(item.jenis && item.jenis.toLowerCase().includes(q)) return true;
+  for(const u of item.units){
+    if(u.b && u.b.toLowerCase().includes(q)) return true;
+  }
+  return false;
+}
+
+function getFiltered(){
+  const q = currentQuery.trim();
+  let list = ITEMS.filter(it =>
+    matchesQuery(it, q) &&
+    (!filterJenis || it.jenis === filterJenis) &&
+    (!filterMerek || it.merek === filterMerek) &&
+    (!filterSupplier || it.supplier === filterSupplier)
+  );
+  list.sort((a,b) => a.nama.localeCompare(b.nama, 'id'));
+  return list;
+}
+
+/* ---------- RENDER ---------- */
+function unitRowHtml(item, u){
+  const idx = item._idx;
+  const margin = calcMargin(u.beli, u.jual);
+  const marginStr = margin === null ? '' : margin.toFixed(1);
+  const marginCls = margin === null ? '' : (margin >= 0 ? 'pos' : 'neg');
+  const barcodeHtml = u.b
+    ? `<span class="unit-barcode">${escapeHtml(u.b)}</span>`
+    : `<span class="unit-barcode empty">tanpa barcode</span>`;
+  return `
+    <div class="unit-row">
+      <div class="unit-satuan">${escapeHtml(u.s)}</div>
+      ${barcodeHtml}
+      <div class="field beli-field">
+        <div class="field-label">Harga Beli</div>
+        <div class="beli-val">${fmtInt(u.beli) || 0}</div>
+      </div>
+      <div class="field jual-field">
+        <div class="field-label">Harga Jual</div>
+        <div class="input-wrap">
+          <span class="input-prefix">Rp</span>
+          <input class="num-input jual-input" type="number" step="1" min="0"
+            value="${fmtInt(u.jual)}"
+            data-idx="${idx}" data-n="${u.n}" data-role="jual">
+        </div>
+      </div>
+      <div class="field margin-field">
+        <div class="field-label">Margin</div>
+        <div class="input-wrap">
+          <input class="num-input margin-input ${marginCls}" type="number" step="0.1"
+            value="${marginStr}" ${margin === null ? 'disabled placeholder="—"' : ''}
+            data-idx="${idx}" data-n="${u.n}" data-role="margin">
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function cardHtml(item){
+  const metaParts = [];
+  metaParts.push(`<span><b>Kode</b> ${escapeHtml(item.kode)}</span>`);
+  if(item.jenis) metaParts.push(`<span><b>Jenis</b> ${escapeHtml(item.jenis)}</span>`);
+  if(item.merek) metaParts.push(`<span><b>Merek</b> ${escapeHtml(item.merek)}</span>`);
+  if(item.supplier) metaParts.push(`<span><b>Supplier</b> ${escapeHtml(item.supplier)}</span>`);
+  return `
+    <div class="card">
+      <div class="card-top">
+        <div class="card-name">${escapeHtml(item.nama)}</div>
+        <div class="card-meta">${metaParts.join('')}</div>
+      </div>
+      <div class="units">${item.units.map(u => unitRowHtml(item, u)).join('')}</div>
+    </div>
+  `;
+}
+
+function render(){
+  countPill.innerHTML = `<b>${ITEMS.length.toLocaleString('id-ID')}</b> item di database`;
+  const filtered = getFiltered();
+  const hasFilter = filterJenis || filterMerek || filterSupplier;
+  el('filterClear').classList.toggle('show', !!hasFilter);
+
+  if(ITEMS.length === 0){
+    resultsEl.innerHTML = '';
+    hintEl.textContent = '';
+    return;
+  }
+  if(filtered.length === 0){
+    resultsEl.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>Tidak ada item yang cocok</p>
+        <div class="sub">coba ubah kata kunci atau filter</div>
+      </div>`;
+    hintEl.textContent = '';
+    return;
+  }
+  hintEl.textContent = `Menampilkan ${filtered.length.toLocaleString('id-ID')} item`;
+  resultsEl.innerHTML = filtered.map(cardHtml).join('');
+}
+
+/* live edit: update DOM + push to Sheets without full re-render (keeps focus) */
+resultsEl.addEventListener('input', (e) => {
+  const t = e.target;
+  if(!t.matches('.num-input')) return;
+  const idx = parseInt(t.dataset.idx, 10);
+  const n = parseInt(t.dataset.n, 10);
+  const role = t.dataset.role;
+  const item = ITEMS.find(it => it._idx === idx);
+  if(!item) return;
+  const u = item.units.find(uu => uu.n === n);
+  if(!u) return;
+
+  if(role === 'jual'){
+    const jual = parseFloat(t.value);
+    u.jual = isNaN(jual) ? 0 : Math.round(jual);
+    const margin = calcMargin(u.beli, u.jual);
+    const marginInput = resultsEl.querySelector(`.margin-input[data-idx="${idx}"][data-n="${n}"]`);
+    if(marginInput && margin !== null){
+      marginInput.value = margin.toFixed(1);
+      marginInput.classList.remove('pos','neg');
+      marginInput.classList.add(margin >= 0 ? 'pos' : 'neg');
+    }
+  } else if(role === 'margin'){
+    const margin = parseFloat(t.value);
+    if(u.beli > 0 && !isNaN(margin)){
+      u.jual = Math.round(u.beli * (1 + margin / 100));
+      const jualInput = resultsEl.querySelector(`.jual-input[data-idx="${idx}"][data-n="${n}"]`);
+      if(jualInput) jualInput.value = u.jual;
+      t.classList.remove('pos','neg');
+      t.classList.add(margin >= 0 ? 'pos' : 'neg');
+    }
+  }
+  queueEdit(item, u);
+});
+
+/* ---------- SEARCH / FILTER UI ---------- */
+let debounceTimer;
+searchInput.addEventListener('input', (e) => {
+  clearTimeout(debounceTimer);
+  clearBtn.classList.toggle('show', e.target.value.length > 0);
+  debounceTimer = setTimeout(() => { currentQuery = e.target.value; render(); }, 150);
+});
+clearBtn.addEventListener('click', () => {
+  searchInput.value = ''; currentQuery = '';
+  clearBtn.classList.remove('show'); render(); searchInput.focus();
+});
+el('filterJenis').addEventListener('change', (e) => { filterJenis = e.target.value; render(); });
+el('filterMerek').addEventListener('change', (e) => { filterMerek = e.target.value; render(); });
+el('filterSupplier').addEventListener('change', (e) => { filterSupplier = e.target.value; render(); });
+el('filterClear').addEventListener('click', () => {
+  filterJenis = ''; filterMerek = ''; filterSupplier = '';
+  el('filterJenis').value = ''; el('filterMerek').value = ''; el('filterSupplier').value = '';
+  render();
+});
+el('refreshBtn').addEventListener('click', () => loadItems(true));
+
+window.addEventListener('scroll', () => {
+  el('topbar').classList.toggle('scrolled', window.scrollY > 4);
+});
+
+function showStatus(msg, isErr){
+  statusMsg.textContent = msg;
+  statusMsg.classList.toggle('err', !!isErr);
+  statusMsg.classList.add('show');
+  clearTimeout(showStatus._t);
+  showStatus._t = setTimeout(() => statusMsg.classList.remove('show'), 3000);
+}
+
+/* ---------- AUTO REFRESH (skip if user is actively editing) ---------- */
+autoRefreshTimer = setInterval(() => {
+  const active = document.activeElement;
+  if(active && active.classList && active.classList.contains('num-input')) return;
+  loadItems(false);
+}, 120000);
+
+/* ---------- PWA INSTALL PROMPT ---------- */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  el('installBtn').classList.add('show');
+});
+el('installBtn').addEventListener('click', async () => {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  el('installBtn').classList.remove('show');
+});
+window.addEventListener('appinstalled', () => {
+  el('installBtn').classList.remove('show');
+  showStatus('Aplikasi berhasil diinstall', false);
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.error('SW register failed', err));
+  });
+}
+
+loadItems(false);
+</script>
+</body>
+</html>
