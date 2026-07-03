@@ -154,6 +154,7 @@
   }
   .sync-dot{width:6px; height:6px; border-radius:50%; background:var(--teal);}
   .sync-dot.err{background:var(--red);}
+  .sync-dot.cache{background:var(--accent);}
 
   .status-msg{
     font-family:'IBM Plex Mono',monospace;
@@ -261,15 +262,61 @@
     font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint);
   }
 
-  @media (max-width:600px){
-    h1{font-size:26px;}
-    .sync-label{margin-left:0;}
-    .unit-row{grid-template-columns: 1fr 1fr; grid-template-areas: "satuan barcode" "beli beli" "jual margin"; row-gap:8px;}
-    .unit-satuan{grid-area:satuan;}
-    .unit-barcode{grid-area:barcode; text-align:right;}
-    .unit-row > .field.beli-field{grid-area:beli;}
+  @media (max-width:640px){
+    .wrap{padding:0 12px 40px;}
+    .topbar-inner{padding:0 12px;}
+    header{margin-bottom:12px;}
+    .brand-eyebrow{font-size:10px;}
+    h1{font-size:24px;}
+    .count-pill{font-size:11px; padding:6px 10px;}
+
+    .search-box input{font-size:16px; padding:13px 40px;}
+    .search-box{margin-bottom:10px;}
+
+    .filters{flex-direction:column; gap:8px;}
+    .filter-select{width:100%; font-size:14px; padding:12px 32px 12px 14px;}
+    .filter-clear{width:100%; text-align:center; padding:11px 14px;}
+
+    .toolbar{flex-direction:column; align-items:stretch; gap:8px; margin-top:2px;}
+    .tbtn{width:100%; justify-content:center; padding:12px; font-size:14px;}
+    .sync-label{margin-left:0; justify-content:center; order:3; padding-top:2px;}
+    .status-msg{justify-content:center; order:2; font-size:11px;}
+
+    .hint{text-align:center;}
+
+    .card{padding:14px; border-radius:12px;}
+    .card-top{margin-bottom:12px;}
+    .card-name{font-size:16px;}
+    .card-meta{gap:6px; margin-top:8px;}
+    .card-meta span{
+      background:var(--bg); border:1px solid var(--line); border-radius:6px;
+      padding:4px 8px; font-size:10.5px;
+    }
+
+    .units{gap:10px;}
+    .unit-row{
+      grid-template-columns: auto 1fr;
+      grid-template-areas: "satuan barcode" "beli beli" "jual margin";
+      row-gap:10px; column-gap:10px;
+      background:var(--bg);
+      border-radius:10px;
+      padding:12px;
+    }
+    .unit-satuan{grid-area:satuan; padding:6px 14px; font-size:13px;}
+    .unit-barcode{grid-area:barcode; text-align:right; font-size:11px; align-self:center;}
+    .unit-row > .field.beli-field{
+      grid-area:beli; flex-direction:row; align-items:center; justify-content:space-between;
+      background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 10px;
+    }
+    .unit-row > .field.beli-field .field-label{padding-left:0;}
+    .unit-row > .field.beli-field .beli-val{padding:0;}
     .unit-row > .field.jual-field{grid-area:jual;}
     .unit-row > .field.margin-field{grid-area:margin;}
+
+    .num-input{font-size:15px; padding:12px 10px 12px 30px; min-height:44px;}
+    .margin-input{padding-left:10px; padding-right:28px;}
+    .input-prefix, .input-suffix{font-size:13px;}
+    .field-label{font-size:10px; margin-bottom:1px;}
   }
 </style>
 </head>
@@ -363,40 +410,74 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* ---------- LOCAL CACHE (instant paint on open) ---------- */
+const CACHE_KEY = 'cekharga-cache-v1';
+
+function loadFromCache(){
+  try{
+    const raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return false;
+    const parsed = JSON.parse(raw);
+    if(!parsed.items || !parsed.items.length) return false;
+    ITEMS = parsed.items.map((it, i) => ({...it, _idx: i}));
+    buildFilterOptions();
+    render();
+    setSyncState('cache', new Date(parsed.savedAt));
+    return true;
+  }catch(e){
+    console.error('cache read failed', e);
+    return false;
+  }
+}
+
+function saveToCache(items){
+  try{
+    localStorage.setItem(CACHE_KEY, JSON.stringify({items, savedAt: new Date().toISOString()}));
+  }catch(e){
+    console.error('cache save failed', e);
+  }
+}
+
 /* ---------- LOAD FROM GOOGLE SHEETS ---------- */
-async function loadItems(showToast){
+async function loadItems(showToast, background){
   if(!isConfigured()){
     el('configBanner').style.display = 'block';
     countPill.textContent = 'Belum terhubung';
     return;
   }
   el('configBanner').style.display = 'none';
-  el('refreshIcon').classList.add('spin');
+  if(!background) el('refreshIcon').classList.add('spin');
   try{
     const res = await fetch(CONFIG.WEBAPP_URL, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    ITEMS = (data.items || []).map((it, i) => ({...it, _idx: i}));
+    const items = data.items || [];
+    ITEMS = items.map((it, i) => ({...it, _idx: i}));
     buildFilterOptions();
     render();
-    setSyncState(true, new Date());
+    setSyncState('synced', new Date());
+    saveToCache(items);
     if(showToast) showStatus('Data terbaru dimuat', false);
   }catch(err){
     console.error(err);
-    setSyncState(false, null);
-    showStatus('Gagal memuat data — cek koneksi / URL Apps Script', true);
+    // keep whatever is currently shown (cache or previous state) instead of clearing it
+    setSyncState('error', null);
+    if(showToast) showStatus('Gagal memuat data — cek koneksi / URL Apps Script', true);
   }finally{
     el('refreshIcon').classList.remove('spin');
   }
 }
 
-function setSyncState(ok, when){
+function setSyncState(state, when){
   const dot = el('syncDot');
   const text = el('syncText');
-  dot.classList.toggle('err', !ok);
-  if(ok && when){
+  dot.classList.toggle('err', state === 'error');
+  dot.classList.toggle('cache', state === 'cache');
+  if(state === 'synced' && when){
     text.textContent = 'sinkron ' + when.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-  }else if(!ok){
+  }else if(state === 'cache' && when){
+    text.textContent = 'dari cache · ' + when.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) + ' — menyinkronkan…';
+  }else if(state === 'error'){
     text.textContent = 'gagal sinkron';
   }
 }
@@ -421,11 +502,12 @@ async function flushEdits(){
       body: JSON.stringify({action: 'updatePrices', edits})
     });
     showStatus('Tersimpan ✓ — muncul di semua perangkat', false);
-    setSyncState(true, new Date());
+    setSyncState('synced', new Date());
+    saveToCache(ITEMS.map(({_idx, ...rest}) => rest));
   }catch(err){
     console.error(err);
     showStatus('Gagal menyimpan — cek koneksi', true);
-    setSyncState(false, null);
+    setSyncState('error', null);
   }
 }
 
@@ -626,7 +708,7 @@ function showStatus(msg, isErr){
 autoRefreshTimer = setInterval(() => {
   const active = document.activeElement;
   if(active && active.classList && active.classList.contains('num-input')) return;
-  loadItems(false);
+  loadItems(false, true);
 }, 120000);
 
 /* ---------- PWA INSTALL PROMPT ---------- */
@@ -654,7 +736,8 @@ if('serviceWorker' in navigator){
   });
 }
 
-loadItems(false);
+const hadCache = loadFromCache();
+loadItems(false, hadCache);
 </script>
 </body>
 </html>
