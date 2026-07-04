@@ -1,5 +1,5 @@
-const CACHE_NAME = 'cekharga-shell-v2';
-const APP_SHELL = ['./cek-harga.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'cekharga-shell-v3';
+const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
