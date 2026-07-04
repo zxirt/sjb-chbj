@@ -78,7 +78,10 @@
   }
   .count-pill b{color:var(--accent); font-weight:700;}
 
-  .search-box{position:relative; margin-bottom:12px;}
+  .header-right{display:flex; flex-direction:column; align-items:flex-end; gap:5px;}
+
+  .search-row{display:flex; gap:8px; align-items:center; margin-bottom:12px;}
+  .search-box{position:relative; flex:1; margin-bottom:0;}
   .search-box input{
     width:100%;
     background:var(--card);
@@ -106,10 +109,34 @@
   .clear-btn.show{display:block;}
   .clear-btn:hover{color:var(--ink);}
 
-  .filters{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+  .filter-toggle{
+    position:relative; flex-shrink:0;
+    width:48px; height:48px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--card); border:1.5px solid var(--line); border-radius:var(--radius);
+    color:var(--ink-dim); cursor:pointer; box-shadow:var(--shadow);
+    transition:all .15s ease;
+  }
+  .filter-toggle svg{width:19px; height:19px;}
+  .filter-toggle:hover{border-color:var(--accent); color:var(--accent);}
+  .filter-toggle.active{border-color:var(--accent); color:var(--accent); background:var(--accent-bg);}
+  .filter-badge{
+    position:absolute; top:-5px; right:-5px;
+    background:var(--accent); color:#fff; font-size:10px; font-weight:700;
+    width:17px; height:17px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+  }
+
+  .filters{
+    display:none; gap:8px; flex-wrap:wrap; margin-bottom:12px;
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px; box-shadow:var(--shadow);
+  }
+  .filters.show{display:flex;}
   .filter-select{
     font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
-    background:var(--card); border:1.5px solid var(--line);
+    background:var(--bg); border:1.5px solid var(--line);
     color:var(--ink-dim);
     padding:9px 30px 9px 12px; border-radius:9px;
     cursor:pointer; outline:none;
@@ -150,7 +177,7 @@
 
   .sync-label{
     font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint);
-    margin-left:auto; display:flex; align-items:center; gap:6px;
+    display:flex; align-items:center; gap:6px;
   }
   .sync-dot{width:6px; height:6px; border-radius:50%; background:var(--teal);}
   .sync-dot.err{background:var(--red);}
@@ -164,12 +191,6 @@
   }
   .status-msg.show{opacity:1;}
   .status-msg.err{color:var(--red);}
-
-  .hint{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px; color:var(--ink-faint);
-    padding:10px 2px;
-  }
 
   .results{display:flex; flex-direction:column; gap:10px; padding-top:6px;}
 
@@ -289,10 +310,11 @@
 
     .toolbar{flex-direction:column; align-items:stretch; gap:8px; margin-top:2px;}
     .tbtn{width:100%; justify-content:center; padding:12px; font-size:14px;}
-    .sync-label{margin-left:0; justify-content:center; order:3; padding-top:2px;}
-    .status-msg{justify-content:center; order:2; font-size:11px;}
+    .status-msg{justify-content:center; font-size:11px;}
 
-    .hint{text-align:center;}
+    .header-right{gap:4px;}
+    .sync-label{font-size:10px;}
+    .count-pill{font-size:10.5px; padding:5px 9px;}
 
     .card{padding:14px; border-radius:12px;}
     .card-top{margin-bottom:12px;}
@@ -338,16 +360,25 @@
         <div class="brand-eyebrow">Item Database · Cek Harga</div>
         <h1>Cek Harga</h1>
       </div>
-      <div class="count-pill" id="countPill">Memuat…</div>
+      <div class="header-right">
+        <span class="sync-label" id="syncLabel"><span class="sync-dot" id="syncDot"></span><span id="syncText">belum sinkron</span></span>
+        <div class="count-pill" id="countPill">Memuat…</div>
+      </div>
     </header>
 
-    <div class="search-box">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="searchInput" type="text" placeholder="Cari nama barang, kode, barcode, atau supplier…" autocomplete="off">
-      <button class="clear-btn" id="clearBtn">×</button>
+    <div class="search-row">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" type="text" placeholder="Cari nama barang, kode, barcode, atau supplier…" autocomplete="off">
+        <button class="clear-btn" id="clearBtn">×</button>
+      </div>
+      <button class="filter-toggle" id="filterToggle" title="Filter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+        <span class="filter-badge" id="filterBadge" style="display:none;">0</span>
+      </button>
     </div>
 
-    <div class="filters">
+    <div class="filters" id="filtersPanel">
       <select class="filter-select" id="filterJenis"><option value="">Semua Jenis</option></select>
       <select class="filter-select" id="filterMerek"><option value="">Semua Merek</option></select>
       <select class="filter-select" id="filterSupplier"><option value="">Semua Supplier</option></select>
@@ -364,9 +395,7 @@
         Install Aplikasi
       </button>
       <span class="status-msg" id="statusMsg"></span>
-      <span class="sync-label" id="syncLabel"><span class="sync-dot" id="syncDot"></span><span id="syncText">belum sinkron</span></span>
     </div>
-    <div class="hint" id="resultHint"></div>
   </div>
 </div>
 
@@ -398,7 +427,6 @@ let autoRefreshTimer = null;
 
 const el = (id) => document.getElementById(id);
 const resultsEl = el('results');
-const hintEl = el('resultHint');
 const countPill = el('countPill');
 const searchInput = el('searchInput');
 const clearBtn = el('clearBtn');
@@ -624,12 +652,15 @@ function cardHtml(item){
 function render(){
   countPill.innerHTML = `<b>${ITEMS.length.toLocaleString('id-ID')}</b> item di database`;
   const filtered = getFiltered();
-  const hasFilter = filterJenis || filterMerek || filterSupplier;
-  el('filterClear').classList.toggle('show', !!hasFilter);
+  const activeCount = [filterJenis, filterMerek, filterSupplier].filter(Boolean).length;
+  el('filterClear').classList.toggle('show', activeCount > 0);
+  el('filterToggle').classList.toggle('active', activeCount > 0);
+  const badge = el('filterBadge');
+  badge.textContent = activeCount;
+  badge.style.display = activeCount > 0 ? 'flex' : 'none';
 
   if(ITEMS.length === 0){
     resultsEl.innerHTML = '';
-    hintEl.textContent = '';
     return;
   }
   if(filtered.length === 0){
@@ -639,10 +670,8 @@ function render(){
         <p>Tidak ada item yang cocok</p>
         <div class="sub">coba ubah kata kunci atau filter</div>
       </div>`;
-    hintEl.textContent = '';
     return;
   }
-  hintEl.textContent = `Menampilkan ${filtered.length.toLocaleString('id-ID')} item`;
   renderChunked(filtered);
 }
 
@@ -721,6 +750,9 @@ el('filterClear').addEventListener('click', () => {
   filterJenis = ''; filterMerek = ''; filterSupplier = '';
   el('filterJenis').value = ''; el('filterMerek').value = ''; el('filterSupplier').value = '';
   render();
+});
+el('filterToggle').addEventListener('click', () => {
+  el('filtersPanel').classList.toggle('show');
 });
 el('refreshBtn').addEventListener('click', () => loadItems(true));
 
