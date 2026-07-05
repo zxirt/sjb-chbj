@@ -109,7 +109,7 @@
   .clear-btn.show{display:block;}
   .clear-btn:hover{color:var(--ink);}
 
-  .filter-toggle{
+  .icon-toggle{
     position:relative; flex-shrink:0;
     width:48px; height:48px;
     display:flex; align-items:center; justify-content:center;
@@ -117,9 +117,9 @@
     color:var(--ink-dim); cursor:pointer; box-shadow:var(--shadow);
     transition:all .15s ease;
   }
-  .filter-toggle svg{width:19px; height:19px;}
-  .filter-toggle:hover{border-color:var(--accent); color:var(--accent);}
-  .filter-toggle.active{border-color:var(--accent); color:var(--accent); background:var(--accent-bg);}
+  .icon-toggle svg{width:19px; height:19px;}
+  .icon-toggle:hover{border-color:var(--accent); color:var(--accent);}
+  .icon-toggle.active{border-color:var(--accent); color:var(--accent); background:var(--accent-bg);}
   .filter-badge{
     position:absolute; top:-5px; right:-5px;
     background:var(--accent); color:#fff; font-size:10px; font-weight:700;
@@ -172,7 +172,7 @@
   .tbtn svg{width:14px; height:14px;}
   .tbtn.install{background:var(--accent); color:#fff; border-color:var(--accent); display:none;}
   .tbtn.install.show{display:flex;}
-  .tbtn .spin{animation:spin 0.8s linear infinite;}
+  .spin{animation:spin 0.8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
 
   .sync-label{
@@ -292,7 +292,9 @@
     .count-pill{font-size:11px; padding:6px 10px;}
 
     .search-box input{font-size:16px; padding:13px 40px;}
-    .search-box{margin-bottom:10px;}
+    .search-row{gap:6px;}
+    .icon-toggle{width:44px; height:44px;}
+    .icon-toggle svg{width:18px; height:18px;}
 
     .filters{
       flex-direction:row; flex-wrap:nowrap; gap:8px;
@@ -372,7 +374,10 @@
         <input id="searchInput" type="text" placeholder="Cari nama barang, kode, barcode, atau supplier…" autocomplete="off">
         <button class="clear-btn" id="clearBtn">×</button>
       </div>
-      <button class="filter-toggle" id="filterToggle" title="Filter">
+      <button class="icon-toggle" id="refreshBtn" title="Refresh Data">
+        <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
+      </button>
+      <button class="icon-toggle" id="filterToggle" title="Filter">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
         <span class="filter-badge" id="filterBadge" style="display:none;">0</span>
       </button>
@@ -386,10 +391,6 @@
     </div>
 
     <div class="toolbar">
-      <button class="tbtn" id="refreshBtn">
-        <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
-        Refresh Data
-      </button>
       <button class="tbtn install" id="installBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>
         Install Aplikasi
