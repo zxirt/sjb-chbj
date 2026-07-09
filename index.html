@@ -441,6 +441,10 @@ function fmtInt(n){
   if(n === null || n === undefined || isNaN(n)) return '';
   return Math.round(n);
 }
+function fmtRibuan(n){
+  if(n === null || n === undefined || isNaN(n)) return '0';
+  return Math.round(n).toLocaleString('id-ID');
+}
 function calcMargin(beli, jual){
   if(!beli || beli <= 0) return null;
   return ((jual - beli) / beli) * 100;
@@ -609,14 +613,14 @@ function unitRowHtml(item, u){
       ${barcodeHtml}
       <div class="field beli-field">
         <div class="field-label">Harga Beli</div>
-        <div class="beli-val">${fmtInt(u.beli) || 0}</div>
+        <div class="beli-val">${fmtRibuan(u.beli)}</div>
       </div>
       <div class="field jual-field">
         <div class="field-label">Harga Jual</div>
         <div class="input-wrap">
           <span class="input-prefix">Rp</span>
-          <input class="num-input jual-input" type="number" step="1" min="0"
-            value="${fmtInt(u.jual)}"
+          <input class="num-input jual-input" type="text" inputmode="numeric"
+            value="${fmtRibuan(u.jual)}"
             data-idx="${idx}" data-n="${u.n}" data-role="jual">
         </div>
       </div>
@@ -711,8 +715,10 @@ resultsEl.addEventListener('input', (e) => {
   if(!u) return;
 
   if(role === 'jual'){
-    const jual = parseFloat(t.value);
-    u.jual = isNaN(jual) ? 0 : Math.round(jual);
+    // strip anything that isn't a digit (blocks stray dots/letters while typing)
+    const raw = t.value.replace(/\D/g, '');
+    if(t.value !== raw) t.value = raw;
+    u.jual = raw === '' ? 0 : parseInt(raw, 10);
     const margin = calcMargin(u.beli, u.jual);
     const marginInput = resultsEl.querySelector(`.margin-input[data-idx="${idx}"][data-n="${n}"]`);
     if(marginInput && margin !== null){
@@ -725,12 +731,30 @@ resultsEl.addEventListener('input', (e) => {
     if(u.beli > 0 && !isNaN(margin)){
       u.jual = Math.round(u.beli * (1 + margin / 100));
       const jualInput = resultsEl.querySelector(`.jual-input[data-idx="${idx}"][data-n="${n}"]`);
-      if(jualInput) jualInput.value = u.jual;
+      if(jualInput) jualInput.value = fmtRibuan(u.jual);
       t.classList.remove('pos','neg');
       t.classList.add(margin >= 0 ? 'pos' : 'neg');
     }
   }
   queueEdit(item, u);
+});
+
+/* jual field: show raw digits while editing, reformat with thousand-separators on blur */
+resultsEl.addEventListener('focusin', (e) => {
+  const t = e.target;
+  if(t.matches('.jual-input')){
+    t.value = t.value.replace(/\D/g, '');
+  }
+});
+resultsEl.addEventListener('focusout', (e) => {
+  const t = e.target;
+  if(t.matches('.jual-input')){
+    const idx = parseInt(t.dataset.idx, 10);
+    const n = parseInt(t.dataset.n, 10);
+    const item = ITEMS.find(it => it._idx === idx);
+    const u = item && item.units.find(uu => uu.n === n);
+    if(u) t.value = fmtRibuan(u.jual);
+  }
 });
 
 /* ---------- SEARCH / FILTER UI ---------- */
